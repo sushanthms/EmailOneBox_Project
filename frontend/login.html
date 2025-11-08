@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Onebox - Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 420px;
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .logo h1 {
+      font-size: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .logo p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+      border-left: 4px solid #c33;
+    }
+
+    .error-message.show {
+      display: block;
+      animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group input::placeholder {
+      color: #999;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .login-btn .spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ffffff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin: 0 auto;
+    }
+
+    .login-btn.loading .spinner {
+      display: block;
+    }
+
+    .login-btn.loading .btn-text {
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .demo-accounts {
+      margin-top: 30px;
+      padding-top: 25px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .demo-accounts h3 {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .demo-account {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .demo-account:hover {
+      transform: translateX(5px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .demo-account strong {
+      color: #667eea;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .demo-account code {
+      background: rgba(255,255,255,0.5);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      color: rgba(255,255,255,0.8);
+      font-size: 13px;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 30px 20px;
+      }
+
+      .logo h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <h1>📧 Email Onebox</h1>
+      <p>Sign in to access your emails</p>
+    </div>
+
+    <div class="error-message" id="errorMessage"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email"
+          placeholder="your@email.com"
+          autocomplete="email"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+
+      <button type="submit" class="login-btn" id="loginBtn">
+        <span class="btn-text">Sign In</span>
+        <div class="spinner"></div>
+      </button>
+    </form>
+
+    <div class="demo-accounts">
+      <h3>📌 Login Instructions</h3>
+      <div class="demo-account" style="cursor: default; background: #e8f5e9;">
+        <strong>🔑 Use Your Email App Password</strong>
+        <span style="font-size: 12px; color: #555; display: block; margin-top: 5px;">
+          Login with your email address and the <strong>16-digit app password</strong> you created for IMAP access (not your regular email password).
+        </span>
+      </div>
+      <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; font-size: 12px; color: #856404;">
+        <strong>Example:</strong><br>
+        Email: <code>your_email@gmail.com</code><br>
+        Password: <code>abcdefghijklmnop</code> (16 digits, no spaces)
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Secure Email Aggregation Platform</p>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/api';
+
+    // Load demo account emails from server
+    async function loadDemoAccounts() {
+      try {
+        const response = await fetch(`${API_URL}/health`);
+        if (response.ok) {
+          // In a real app, you'd have an endpoint to get available accounts
+          // For now, we'll just show placeholders
+          document.getElementById('email1Display').textContent = 'your_email@gmail.com';
+          document.getElementById('email2Display').textContent = 'your_email@outlook.com';
+        }
+      } catch (error) {
+        console.log('Could not load demo accounts');
+      }
+    }
+
+    // Fill credentials (for demo purposes)
+    function fillCredentials(accountType) {
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      
+      if (accountType === 'EMAIL1') {
+        emailInput.value = 'your_email@gmail.com'; // Replace with actual from .env
+        passwordInput.value = 'your_password'; // Replace with actual from .env
+      } else if (accountType === 'EMAIL2') {
+        emailInput.value = 'your_email@outlook.com';
+        passwordInput.value = 'your_password';
+      }
+      
+      emailInput.focus();
+    }
+
+    // Handle login form submission
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errorMessage = document.getElementById('errorMessage');
+      const loginBtn = document.getElementById('loginBtn');
+
+      // Clear previous errors
+      errorMessage.classList.remove('show');
+      errorMessage.textContent = '';
+
+      // Disable button and show loading
+      loginBtn.disabled = true;
+      loginBtn.classList.add('loading');
+
+      try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Store session info
+          localStorage.setItem('sessionId', data.sessionId);
+          localStorage.setItem('userEmail', data.email);
+          
+          // Show success message briefly
+          errorMessage.style.background = '#d4edda';
+          errorMessage.style.color = '#155724';
+          errorMessage.style.borderColor = '#155724';
+          errorMessage.textContent = '✓ Login successful! Redirecting...';
+          errorMessage.classList.add('show');
+          
+          // Redirect to main app
+          setTimeout(() => {
+            window.location.href = '/index.html';
+          }, 500);
+        } else {
+          // Show error
+          errorMessage.textContent = data.error || 'Invalid email or password';
+          errorMessage.classList.add('show');
+          loginBtn.disabled = false;
+          loginBtn.classList.remove('loading');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        errorMessage.textContent = 'Unable to connect to server. Please try again.';
+        errorMessage.classList.add('show');
+        loginBtn.disabled = false;
+        loginBtn.classList.remove('loading');
+      }
+    });
+
+    // Auto-fill email field if previously logged in
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedEmail = localStorage.getItem('userEmail');
+      if (savedEmail) {
+        document.getElementById('email').value = savedEmail;
+        document.getElementById('password').focus();
+      }
+      
+      loadDemoAccounts();
+    });
+
+    // Handle Enter key on password field
+    document.getElementById('password').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+      }
+    });
+  </script>
+</body>
+</html>

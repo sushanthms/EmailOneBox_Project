@@ -2,15 +2,17 @@ const express = require('express');
 const router = express.Router();
 const elasticsearchService = require('../services/elasticsearchService');
 
-// Search emails
+// Search emails - FILTERED BY USER
 router.get('/search', async (req, res) => {
   try {
-    const { q, account, folder, category } = req.query;
+    const { q, folder, category } = req.query;
+    
     const emails = await elasticsearchService.searchEmails(q, {
-      account,
+      account: req.user.emailAccount,  // Force user's account only
       folder,
       category
     });
+    
     res.json({ success: true, data: emails, count: emails.length });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -51,11 +53,13 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Get all accounts
+// Get accounts - ONLY USER'S ACCOUNT
 router.get('/meta/accounts', async (req, res) => {
   try {
-    const accounts = await elasticsearchService.getAccounts();
-    res.json({ success: true, data: accounts });
+    res.json({ 
+      success: true, 
+      data: [req.user.emailAccount]  // Only their account
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
