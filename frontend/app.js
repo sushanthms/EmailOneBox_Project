@@ -3,11 +3,22 @@ const API_URL = 'http://localhost:3000/api';
 let currentEmails = [];
 let selectedEmailId = null;
 
+// Get session ID from localStorage
+function getSessionId() {
+  return localStorage.getItem('sessionId');
+}
+
+// Create headers with authentication
+function getAuthHeaders() {
+  return {
+    'X-Session-Id': getSessionId(),
+    'Content-Type': 'application/json'
+  };
+}
+
 // DOM Elements
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
-const accountFilter = document.getElementById('accountFilter');
-const folderFilter = document.getElementById('folderFilter');
 const categoryFilter = document.getElementById('categoryFilter');
 const refreshBtn = document.getElementById('refreshBtn');
 const emailContainer = document.getElementById('emailContainer');
@@ -15,10 +26,7 @@ const emailDetail = document.getElementById('emailDetail');
 
 // Initialize
 async function init() {
-  await loadAccounts();
-  await loadFolders();
   await loadEmails();
-  
   setupEventListeners();
 }
 
@@ -28,62 +36,11 @@ function setupEventListeners() {
     if (e.key === 'Enter') loadEmails();
   });
   
-  accountFilter.addEventListener('change', () => {
-    loadFolders();
-    loadEmails();
-  });
-  
-  folderFilter.addEventListener('change', loadEmails);
   categoryFilter.addEventListener('change', loadEmails);
   refreshBtn.addEventListener('click', loadEmails);
 }
 
-// Load accounts
-async function loadAccounts() {
-  try {
-    const response = await fetch(`${API_URL}/emails/meta/accounts`);
-    const data = await response.json();
-    
-    if (data.success) {
-      accountFilter.innerHTML = '<option value="">All Accounts</option>';
-      data.data.forEach(account => {
-        const option = document.createElement('option');
-        option.value = account;
-        option.textContent = account;
-        accountFilter.appendChild(option);
-      });
-    }
-  } catch (error) {
-    console.error('Error loading accounts:', error);
-  }
-}
-
-// Load folders
-async function loadFolders() {
-  try {
-    const account = accountFilter.value;
-    const url = account 
-      ? `${API_URL}/emails/meta/folders?account=${account}`
-      : `${API_URL}/emails/meta/folders`;
-    
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (data.success) {
-      folderFilter.innerHTML = '<option value="">All Folders</option>';
-      data.data.forEach(folder => {
-        const option = document.createElement('option');
-        option.value = folder;
-        option.textContent = folder;
-        folderFilter.appendChild(option);
-      });
-    }
-  } catch (error) {
-    console.error('Error loading folders:', error);
-  }
-}
-
-// Load emails
+// Load emails with authentication
 async function loadEmails() {
   try {
     emailContainer.innerHTML = '<div class="loading">Loading emails...</div>';
@@ -93,16 +50,20 @@ async function loadEmails() {
     const query = searchInput.value.trim();
     if (query) params.append('q', query);
     
-    const account = accountFilter.value;
-    if (account) params.append('account', account);
-    
-    const folder = folderFilter.value;
-    if (folder) params.append('folder', folder);
-    
     const category = categoryFilter.value;
     if (category) params.append('category', category);
     
-    const response = await fetch(`${API_URL}/emails/search?${params.toString()}`);
+    const response = await fetch(`${API_URL}/emails/search?${params.toString()}`, {
+      headers: getAuthHeaders()
+    });
+    
+    if (response.status === 401) {
+      // Session expired - redirect to login
+      localStorage.clear();
+      window.location.href = '/login.html';
+      return;
+    }
+    
     const data = await response.json();
     
     if (data.success) {
@@ -113,7 +74,7 @@ async function loadEmails() {
     }
   } catch (error) {
     console.error('Error loading emails:', error);
-    emailContainer.innerHTML = '<div class="loading">Error loading emails</div>';
+    emailContainer.innerHTML = '<div class="loading">Error loading emails. Please try again.</div>';
   }
 }
 
@@ -146,7 +107,6 @@ function renderEmails(emails) {
       <div class="email-preview">${escapeHtml(email.body.substring(0, 100))}...</div>
       <div class="email-meta">
         <span class="category-badge category-${categoryClass}">${email.category}</span>
-        <span class="account-badge">${email.account}</span>
       </div>
     `;
     
@@ -155,7 +115,7 @@ function renderEmails(emails) {
   });
 }
 
-// Show email detail
+// Show email detail with authentication
 async function showEmailDetail(emailId) {
   try {
     selectedEmailId = emailId;
@@ -168,7 +128,16 @@ async function showEmailDetail(emailId) {
       }
     });
     
-    const response = await fetch(`${API_URL}/emails/${emailId}`);
+    const response = await fetch(`${API_URL}/emails/${emailId}`, {
+      headers: getAuthHeaders()
+    });
+    
+    if (response.status === 401) {
+      localStorage.clear();
+      window.location.href = '/login.html';
+      return;
+    }
+    
     const data = await response.json();
     
     if (data.success) {
@@ -182,7 +151,6 @@ async function showEmailDetail(emailId) {
             <div><strong>From:</strong> ${escapeHtml(email.from)}</div>
             <div><strong>To:</strong> ${escapeHtml(email.to)}</div>
             <div><strong>Date:</strong> ${formatDate(email.date)}</div>
-            <div><strong>Account:</strong> ${email.account}</div>
             <div><strong>Folder:</strong> ${email.folder}</div>
             <div style="margin-top: 10px;">
               <span class="category-badge category-${categoryClass}">${email.category}</span>

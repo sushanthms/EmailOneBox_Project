@@ -44,6 +44,45 @@
     header {
       position: relative;
     }
+
+    /* Adjust sidebar for simplified filters */
+    .sidebar {
+      background: #ecf0f1;
+      padding: 20px;
+      overflow-y: auto;
+      border-right: 1px solid #ddd;
+    }
+
+    .filter-section {
+      margin-bottom: 20px;
+    }
+
+    .stats-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stats-section h3 {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .stat-count {
+      font-weight: bold;
+      color: #3498db;
+    }
   </style>
 </head>
 <body>
@@ -63,33 +102,27 @@
 
     <div class="main-content">
       <aside class="sidebar">
-        <div class="filter-section">
-          <h3>Accounts</h3>
-          <select id="accountFilter">
-            <option value="">All Accounts</option>
-          </select>
+        <div class="stats-section">
+          <h3>📊 Your Account</h3>
+          <div class="stat-item">
+            <span>Email:</span>
+            <span class="stat-count" id="sidebarEmail">-</span>
+          </div>
         </div>
 
         <div class="filter-section">
-          <h3>Folders</h3>
-          <select id="folderFilter">
-            <option value="">All Folders</option>
-          </select>
-        </div>
-
-        <div class="filter-section">
-          <h3>Categories</h3>
+          <h3>📁 Categories</h3>
           <select id="categoryFilter">
             <option value="">All Categories</option>
-            <option value="Interested">Interested</option>
-            <option value="Meeting Booked">Meeting Booked</option>
-            <option value="Not Interested">Not Interested</option>
-            <option value="Spam">Spam</option>
-            <option value="Out of Office">Out of Office</option>
+            <option value="Interested">✨ Interested</option>
+            <option value="Meeting Booked">📅 Meeting Booked</option>
+            <option value="Not Interested">❌ Not Interested</option>
+            <option value="Spam">🚫 Spam</option>
+            <option value="Out of Office">🏖️ Out of Office</option>
           </select>
         </div>
 
-        <button id="refreshBtn" class="refresh-btn">🔄 Refresh</button>
+        <button id="refreshBtn" class="refresh-btn">🔄 Refresh Emails</button>
       </aside>
 
       <main class="email-list">
@@ -118,6 +151,7 @@
       
       // Display logged-in user
       document.getElementById('userEmail').textContent = '👤 ' + userEmail;
+      document.getElementById('sidebarEmail').textContent = userEmail;
     })();
 
     // Logout function
