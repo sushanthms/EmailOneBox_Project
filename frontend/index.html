@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Onebox</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📧 Email Onebox</h1>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search emails...">
+        <button id="searchBtn">Search</button>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <aside class="sidebar">
+        <div class="filter-section">
+          <h3>Accounts</h3>
+          <select id="accountFilter">
+            <option value="">All Accounts</option>
+          </select>
+        </div>
+
+        <div class="filter-section">
+          <h3>Folders</h3>
+          <select id="folderFilter">
+            <option value="">All Folders</option>
+          </select>
+        </div>
+
+        <div class="filter-section">
+          <h3>Categories</h3>
+          <select id="categoryFilter">
+            <option value="">All Categories</option>
+            <option value="Interested">Interested</option>
+            <option value="Meeting Booked">Meeting Booked</option>
+            <option value="Not Interested">Not Interested</option>
+            <option value="Spam">Spam</option>
+            <option value="Out of Office">Out of Office</option>
+          </select>
+        </div>
+
+        <button id="refreshBtn" class="refresh-btn">🔄 Refresh</button>
+      </aside>
+
+      <main class="email-list">
+        <div id="emailContainer"></div>
+      </main>
+
+      <section class="email-detail" id="emailDetail">
+        <div class="detail-placeholder">
+          Select an email to view details
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
