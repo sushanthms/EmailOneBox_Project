@@ -156,28 +156,26 @@
 
     // Logout function
     function logout() {
-      const sessionId = localStorage.getItem('sessionId');
-      
-      // Call logout API
-      fetch('http://localhost:3000/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'X-Session-Id': sessionId,
-          'Content-Type': 'application/json'
-        }
-      }).then(() => {
-        // Clear local storage
-        localStorage.removeItem('sessionId');
-        localStorage.removeItem('userEmail');
-        
-        // Redirect to login
-        window.location.href = '/login.html';
-      }).catch(() => {
-        // Even if API fails, clear local storage and redirect
-        localStorage.clear();
-        window.location.href = '/login.html';
-      });
+  const sessionId = localStorage.getItem('sessionId');
+  const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api'
+    : 'https://emailonebox-project.onrender.com/api';
+  
+  fetch(`${API_URL}/auth/logout`, {
+    method: 'POST',
+    headers: {
+      'X-Session-Id': sessionId,
+      'Content-Type': 'application/json'
     }
+  }).then(() => {
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('userEmail');
+    window.location.href = '/login.html';
+  }).catch(() => {
+    localStorage.clear();
+    window.location.href = '/login.html';
+  });
+}
   </script>
   <script src="app.js"></script>
 </body>

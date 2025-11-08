@@ -1,33 +1,20 @@
 services:
-  # Elasticsearch Service
-  - type: web
-    name: email-onebox-elasticsearch
-    env: docker
-    dockerfilePath: ./Dockerfile.elasticsearch
-    plan: free
-    envVars:
-      - key: discovery.type
-        value: single-node
-      - key: xpack.security.enabled
-        value: false
-      - key: ES_JAVA_OPTS
-        value: "-Xms256m -Xmx256m"
-
   # Backend API Service
   - type: web
-    name: email-onebox-backend
+    name: emailonebox_project
     env: node
+    region: oregon
+    plan: free
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
-    plan: free
     envVars:
       - key: PORT
         value: 10000
       - key: ELASTICSEARCH_URL
-        fromService:
-          type: web
-          name: email-onebox-elasticsearch
-          property: host
+        value: http://localhost:9200
+      - key: NODE_ENV
+        value: production
+      # Email accounts (configure in Render dashboard)
       - key: EMAIL1_USER
         sync: false
       - key: EMAIL1_PASSWORD
@@ -36,6 +23,15 @@ services:
         value: imap.gmail.com
       - key: EMAIL1_PORT
         value: 993
+      - key: EMAIL2_USER
+        sync: false
+      - key: EMAIL2_PASSWORD
+        sync: false
+      - key: EMAIL2_HOST
+        value: imap.gmail.com
+      - key: EMAIL2_PORT
+        value: 993
+      # Optional integrations
       - key: SLACK_WEBHOOK_URL
         sync: false
       - key: WEBHOOK_URL
