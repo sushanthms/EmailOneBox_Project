@@ -142,4 +142,11 @@ curl "http://localhost:3000/api/emails/search?q=meeting&category=Meeting%20Booke
 **Result:** Multiple filters applied successfully.
 
 ---
-
+### Test 8: Slack Test
+```bash
+curl "curl http://localhost:3000/api/slack/test
+"
+{"success":true,"message":"Test notification sent to Slack! Check your
+                    channel."}
+```
+**Status:** ✅ 200 OK  

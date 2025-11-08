@@ -6,6 +6,8 @@ const path = require('path');
 const { initializeIndex } = require('./config/elasticsearch');
 const emailRoutes = require('./routes/emailRoutes');
 const imapService = require('./services/imapService');
+const slackService = require('./services/slackService');
+const webhookService = require('./services/webhookService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +25,29 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
 
+// Test Slack notification
+app.get('/api/slack/test', async (req, res) => {
+  try {
+    const result = await slackService.sendTestNotification();
+    if (result.success) {
+      res.json({ 
+        success: true, 
+        message: 'Test notification sent to Slack! Check your channel.' 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        error: result.error || 'Failed to send test notification'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 // Serve frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
@@ -35,6 +60,14 @@ async function start() {
     
     // Initialize Elasticsearch
     await initializeIndex();
+
+    // Check Slack configuration
+    if (process.env.SLACK_WEBHOOK_URL) {
+      console.log('✅ Slack notifications enabled');
+      console.log('   Test with: curl http://localhost:3000/api/slack/test\n');
+    } else {
+      console.log('⚠️  Slack notifications disabled (SLACK_WEBHOOK_URL not set)\n');
+    }
 
     // Setup email accounts
     const accounts = [

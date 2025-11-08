@@ -2,6 +2,8 @@ const Imap = require('imap');
 const { simpleParser } = require('mailparser');
 const elasticsearchService = require('./elasticsearchService');
 const aiService = require('./aiCategorizationService');
+const slackService = require('./slackService');
+const webhookService = require('./webhookService');
 
 class ImapService {
   constructor() {
@@ -125,6 +127,13 @@ class ImapService {
                     await elasticsearchService.indexEmail(emailData);
                     emails.push(emailData);
                     processed++;
+                    
+                    // Send Slack notification for Interested emails
+                    if (emailData.category === 'Interested') {
+                      console.log(`📤 Sending Slack notification for: ${emailData.subject}`);
+                      await slackService.sendNotification(emailData);
+                    }
+                    
                     if (processed % 10 === 0) {
                       console.log(`Processed ${processed}/${results.length} emails for ${account}`);
                     }
