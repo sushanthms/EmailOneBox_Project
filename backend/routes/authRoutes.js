@@ -1,93 +1,124 @@
 const express = require('express');
 const router = express.Router();
 const { sessions, generateSessionId } = require('../middleware/auth');
+const userService = require('../services/userService');
+const imapService = require('../services/imapService');
 
-// Build user credentials from environment variables
-function getUsers() {
-  const users = {};
-  
-  // Add EMAIL1 if configured
-  if (process.env.EMAIL1_USER && process.env.EMAIL1_PASSWORD) {
-    users[process.env.EMAIL1_USER] = {
-      password: process.env.EMAIL1_PASSWORD,
-      emailAccount: process.env.EMAIL1_USER,
-      host: process.env.EMAIL1_HOST,
-      port: process.env.EMAIL1_PORT
-    };
-  }
-  
-  // Add EMAIL2 if configured
-  if (process.env.EMAIL2_USER && process.env.EMAIL2_PASSWORD) {
-    users[process.env.EMAIL2_USER] = {
-      password: process.env.EMAIL2_PASSWORD,
-      emailAccount: process.env.EMAIL2_USER,
-      host: process.env.EMAIL2_HOST,
-      port: process.env.EMAIL2_PORT
-    };
-  }
-  
-  // Add EMAIL3 if configured
-  if (process.env.EMAIL3_USER && process.env.EMAIL3_PASSWORD) {
-    users[process.env.EMAIL3_USER] = {
-      password: process.env.EMAIL3_PASSWORD,
-      emailAccount: process.env.EMAIL3_USER,
-      host: process.env.EMAIL3_HOST,
-      port: process.env.EMAIL3_PORT
-    };
-  }
-  
-  return users;
-}
+// Register new user
+router.post('/register', async (req, res) => {
+  try {
+    const { email, password, host, port } = req.body;
 
-// Login endpoint
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  
-  // Get users from environment variables
-  const users = getUsers();
-  
-  // Check if any users are configured
-  if (Object.keys(users).length === 0) {
-    return res.status(500).json({ 
-      error: 'No email accounts configured. Please check your .env file.' 
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ 
+        error: 'Email and password are required' 
+      });
+    }
+
+    // Verify email credentials by trying to connect
+    console.log(`🔐 Verifying credentials for ${email}...`);
+    
+    try {
+      const testConnection = await imapService.connectAccount({
+        user: email,
+        password,
+        host: host || 'imap.gmail.com',
+        port: port || 993
+      });
+      
+      // Disconnect test connection
+      imapService.disconnect(email);
+      console.log(`✅ Credentials verified for ${email}`);
+    } catch (error) {
+      console.error(`❌ Invalid credentials for ${email}:`, error.message);
+      return res.status(401).json({ 
+        error: 'Invalid email credentials. Please check your email and app password.' 
+      });
+    }
+
+    // Register user
+    const result = await userService.registerUser(
+      email, 
+      password, 
+      host || 'imap.gmail.com', 
+      port || 993
+    );
+
+    if (result.success) {
+      console.log(`✅ User registered: ${email}`);
+      res.json({ 
+        success: true, 
+        message: 'Registration successful! You can now login.' 
+      });
+    } else {
+      res.status(400).json({ 
+        error: result.error 
+      });
+    }
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ 
+      error: 'Registration failed. Please try again.' 
     });
   }
-  
-  // Find user
-  const user = users[email];
-  
-  if (!user) {
-    console.log(`Login failed: Email not found - ${email}`);
-    console.log(`Available accounts: ${Object.keys(users).join(', ')}`);
-    return res.status(401).json({ 
-      error: 'Invalid email or password. Please check your credentials.' 
-    });
-  }
-  
-  if (user.password !== password) {
-    console.log(`Login failed: Incorrect password for ${email}`);
-    return res.status(401).json({ 
-      error: 'Invalid email or password. Please check your credentials.' 
-    });
-  }
-  
-  // Generate session
-  const sessionId = generateSessionId();
-  sessions.set(sessionId, {
-    email: email,
-    emailAccount: user.emailAccount
-  });
-  
-  console.log(`✅ Login successful: ${email}`);
-  
-  res.json({
-    success: true,
-    sessionId: sessionId,
-    email: email
-  });
 });
 
-// Logout endpoint
+// Login endpoint (updated to use userService)
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Get user from storage
+    const user = userService.getUser(email);
+    
+    if (!user) {
+      console.log(`Login failed: User not found - ${email}`);
+      return res.status(401).json({ 
+        error: 'Invalid email or password. Please register first.' 
+      });
+    }
+    
+    if (user.password !== password) {
+      console.log(`Login failed: Incorrect password for ${email}`);
+      return res.status(401).json({ 
+        error: 'Invalid email or password.' 
+      });
+    }
+    
+    // Generate session
+    const sessionId = generateSessionId();
+    sessions.set(sessionId, {
+      email: email,
+      emailAccount: user.email,
+      host: user.host,
+      port: user.port
+    });
+    
+    console.log(`✅ Login successful: ${email}`);
+    
+    // Start syncing emails for this user
+    imapService.syncAllAccounts([{
+      user: user.email,
+      password: user.password,
+      host: user.host,
+      port: user.port
+    }]);
+    
+    res.json({
+      success: true,
+      sessionId: sessionId,
+      email: email
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      error: 'Login failed. Please try again.' 
+    });
+  }
+});
+
+// Logout endpoint (unchanged)
 router.post('/logout', (req, res) => {
   const sessionId = req.headers['x-session-id'];
   
@@ -95,6 +126,8 @@ router.post('/logout', (req, res) => {
     const user = sessions.get(sessionId);
     if (user) {
       console.log(`👋 Logout: ${user.email}`);
+      // Disconnect IMAP for this user
+      imapService.disconnect(user.emailAccount);
     }
     sessions.delete(sessionId);
   }
@@ -102,7 +135,7 @@ router.post('/logout', (req, res) => {
   res.json({ success: true });
 });
 
-// Check session
+// Check session (unchanged)
 router.get('/me', (req, res) => {
   const sessionId = req.headers['x-session-id'];
   const user = sessions.get(sessionId);
@@ -112,24 +145,6 @@ router.get('/me', (req, res) => {
   }
   
   res.json({ success: true, user });
-});
-
-// Debug endpoint - shows configured accounts (remove in production)
-router.get('/debug/accounts', (req, res) => {
-  const users = getUsers();
-  const accounts = Object.keys(users).map(email => ({
-    email,
-    configured: true
-  }));
-  
-  res.json({
-    success: true,
-    count: accounts.length,
-    accounts: accounts,
-    message: accounts.length === 0 
-      ? 'No accounts configured in .env' 
-      : `${accounts.length} account(s) configured`
-  });
 });
 
 module.exports = router;

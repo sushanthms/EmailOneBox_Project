@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Onebox - Register</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .register-container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 420px;
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .logo h1 {
+      font-size: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .logo p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+      border-left: 4px solid;
+    }
+
+    .message.error {
+      background: #fee;
+      color: #c33;
+      border-color: #c33;
+    }
+
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border-color: #155724;
+    }
+
+    .message.show {
+      display: block;
+      animation: shake 0.5s;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .register-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .register-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .register-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-top: 20px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .login-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    .info-box {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #856404;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .info-box a {
+      color: #667eea;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <div class="logo">
+      <h1>📧 Email Onebox</h1>
+      <p>Create your account</p>
+    </div>
+
+    <div class="info-box">
+      <strong>⚠️ Important:</strong>
+      You'll need a <strong>Gmail App Password</strong> to register.
+      <br><a href="https://myaccount.google.com/apppasswords" target="_blank">Get App Password →</a>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="email">Gmail Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email"
+          placeholder="your@gmail.com"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">App Password (16 digits)</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password"
+          placeholder="abcdefghijklmnop"
+          minlength="16"
+          maxlength="16"
+          required
+        >
+        <small style="color: #666; font-size: 12px;">
+          Not your Gmail password - use the 16-digit app password
+        </small>
+      </div>
+
+      <button type="submit" class="register-btn" id="registerBtn">
+        Create Account
+      </button>
+    </form>
+
+    <div class="login-link">
+      Already have an account? <a href="/login.html">Login here</a>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000/api'
+      : 'https://emailonebox-project.onrender.com/api';
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.replace(/\s/g, '');
+      const message = document.getElementById('message');
+      const registerBtn = document.getElementById('registerBtn');
+
+      // Clear previous messages
+      message.classList.remove('show', 'error', 'success');
+      message.textContent = '';
+
+      // Validate
+      if (password.length !== 16) {
+        message.classList.add('show', 'error');
+        message.textContent = 'App password must be exactly 16 characters';
+        return;
+      }
+
+      // Disable button
+      registerBtn.disabled = true;
+      registerBtn.textContent = 'Creating account...';
+
+      try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            email, 
+            password,
+            host: 'imap.gmail.com',
+            port: 993
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          message.classList.add('show', 'success');
+          message.textContent = '✓ Registration successful! Redirecting to login...';
+          
+          setTimeout(() => {
+            window.location.href = '/login.html';
+          }, 2000);
+        } else {
+          message.classList.add('show', 'error');
+          message.textContent = data.error || 'Registration failed';
+          registerBtn.disabled = false;
+          registerBtn.textContent = 'Create Account';
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+        message.classList.add('show', 'error');
+        message.textContent = 'Unable to connect to server. Please try again.';
+        registerBtn.disabled = false;
+        registerBtn.textContent = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>
